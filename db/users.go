@@ -3,7 +3,7 @@ import (
     "database/sql"
     "github.com/EORUG/avitotest/models"
 )
-func (db Database) GetAllItems() (*models.UserList, error) {
+func (db Database) GetAllUsers() (*models.UserList, error) {
     list := &models.UserList{}
     rows, err := db.Conn.Query("SELECT * FROM users ORDER BY ID DESC")
     if err != nil {
@@ -19,7 +19,7 @@ func (db Database) GetAllItems() (*models.UserList, error) {
     }
     return list, nil
 }
-func (db Database) GetItemById(userId int) (models.user, error) {
+func (db Database) GetUserById(userId int) (models.User, error) {
     user := models.User{}
     query := `SELECT * FROM users WHERE id = $1;`
     row := db.Conn.QueryRow(query, userId)
@@ -30,7 +30,7 @@ func (db Database) GetItemById(userId int) (models.user, error) {
         return user, err
     }
 }
-func (db Database) UpdateItem(userId int, userData models.User) (models.User, error) {
+func (db Database) UpdateUser(userId int, userData models.User) (models.User, error) {
     user := models.User{}
     query := `UPDATE users SET cash=$1, reserve=$2 WHERE id=$3 RETURNING id, cash, reserve;`
     err := db.Conn.QueryRow(query, userData.Cash, userData.Reserve, userId).Scan(&user.ID, &user.Cash, &user.Reserve)

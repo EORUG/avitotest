@@ -3,7 +3,7 @@ import (
     "database/sql"
     "github.com/EORUG/avitotest/models"
 )
-func (db Database) GetItemById(serviseId int) (models.Servise, error) {
+func (db Database) GetServiseById(serviseId int) (models.Servise, error) {
     servise := models.Servise{}
     query := `SELECT * FROM servises WHERE id = $1;`
     row := db.Conn.QueryRow(query, serviseId)

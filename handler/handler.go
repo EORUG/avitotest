@@ -3,7 +3,7 @@ import (
     "net/http"
     "github.com/go-chi/chi"
     "github.com/go-chi/render"
-    "github.com/EORUG/avitotest"
+    "github.com/EORUG/avitotest/db"
 )
 var dbInstance db.Database
 func NewHandler(db db.Database) http.Handler {
@@ -11,7 +11,8 @@ func NewHandler(db db.Database) http.Handler {
     dbInstance = db
     router.MethodNotAllowed(methodNotAllowedHandler)
     router.NotFound(notFoundHandler)
-    router.Route("/items", items)
+    router.Route("/users", users)
+    router.Route("/purchases", purchases)
     return router
 }
 func methodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {

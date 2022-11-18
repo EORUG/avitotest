@@ -27,7 +27,7 @@ func main() {
         log.Fatalf("Could not set up database: %v", err)
     }
     defer database.Conn.Close()
-
+    err = db.Migrate(database)
     httpHandler := handler.NewHandler(database)
     server := &http.Server{
         Handler: httpHandler,

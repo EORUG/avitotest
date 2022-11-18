@@ -9,4 +9,4 @@ FROM alpine
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 COPY --from=builder /go/src/github.com/EORUG/avitotest/build/avitotest /usr/bin/avitotest
 EXPOSE 8080 8080
-ENTRYPOINT ["/usr/bin/bucketeer"]
+ENTRYPOINT ["/usr/bin/avitotest"]
