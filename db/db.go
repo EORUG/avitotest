@@ -39,41 +39,86 @@ func Initialize(username, password, database string) (Database, error) {
 
 func Migrate(db Database) error {
 	query := `
-    DROP TABLE IF EXISTS purchases;
-    DROP TABLE IF EXISTS servises;
-    DROP TABLE IF EXISTS users;
-    DROP TABLE IF EXISTS orders;
-        CREATE TABLE IF NOT EXISTS users(
-        id SERIAL PRIMARY KEY,
-        cash VARCHAR(100) NOT NULL ,
-        reserve VARCHAR(100) NOT NULL DEFAULT 0
-        );
-        CREATE TABLE IF NOT EXISTS servises(
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        cost VARCHAR(100) NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS orders(
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) 
-        );
-        CREATE TABLE IF NOT EXISTS purchases(
-            id SERIAL PRIMARY KEY,
-            userid INTEGER REFERENCES users (id),
-            serviseid INTEGER REFERENCES servises (id),
-            orderid INTEGER REFERENCES orders (id),
-            paid BOOLEAN DEFAULT false,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        INSERT INTO users(cash) VALUES (100);
-        INSERT INTO users(cash) VALUES (99);
-        
-        INSERT INTO servises(name, cost) VALUES ('first', 100);
-        INSERT INTO servises(name, cost) VALUES ('last', 99);
-        
-        INSERT INTO orders(name) VALUES ('123');
-        INSERT INTO orders(name) VALUES ('23');
-        INSERT INTO orders(name) VALUES ('3');            
+    DROP TABLE IF EXISTS USERS;
+    DROP TABLE IF EXISTS SEGMENTS;
+    DROP TABLE IF EXISTS USER_SEGMENTS;
+    DROP TABLE IF EXISTS LOG;
+		
+		CREATE TABLE IF NOT EXISTS USERS (
+		userID SERIAL PRIMARY KEY
+		);
+
+		CREATE TABLE IF NOT EXISTS SEGMENTS (
+		segmentID SERIAL PRIMARY KEY,
+		segmentName varchar(100) NOT NULL
+		);
+
+		CREATE TABLE IF NOT EXISTS USER_SEGMENTS (
+		userID INTEGER REFERENCES USERS (userID),
+		segmentID integer REFERENCES SEGMENTS (segmentID) ON DELETE CASCADE,
+		TTL timestamp 
+		);
+
+		CREATE TABLE IF NOT EXISTS LOG (
+		userID integer,
+		segmentName varchar(100) NOT NULL,
+		operation varchar(100) NOT NULL,
+		datatime timestamp DEFAULT CURRENT_TIMESTAMP
+		);
+
+		CREATE OR REPLACE FUNCTION LOGERNEW()
+		  RETURNS TRIGGER 
+		  LANGUAGE PLPGSQL
+		  AS
+		$$
+		DECLARE
+		    _segmentName varchar(100);
+		    _operation varchar(100) := TG_ARGV[0]::varchar(100);
+		BEGIN
+		  	SELECT s.segmentName
+		  	INTO _segmentName
+		  	FROM SEGMENTS s
+		  	WHERE s.segmentID = NEW.segmentID;
+			
+			INSERT INTO LOG(userID,segmentName,operation,datatime)
+		    VALUES(NEW.userID,_segmentName,_operation,now());
+		  
+		  RETURN NEW;
+		END;		    
+		$$
+		    
+		CREATE OR REPLACE FUNCTION LOGEROLD()
+		  RETURNS TRIGGER 
+		  LANGUAGE PLPGSQL
+		  AS
+		$$
+		DECLARE
+		    _segmentName varchar(100);
+		    _operation varchar(100) := TG_ARGV[0]::varchar(100);
+		BEGIN
+		  	SELECT s.segmentName
+		  	INTO _segmentName
+		  	FROM SEGMENTS s
+		  	WHERE s.segmentID = OLD.segmentID;
+			
+			INSERT INTO LOG(userID,segmentName,operation,datatime)
+		    VALUES(OLD.userID,_segmentName,_operation,now());
+		  
+		  RETURN OLD;
+		END;
+		$$
+		    
+		CREATE TRIGGER segment_insert
+		  BEFORE INSERT 
+		  ON USER_SEGMENTS
+		  FOR EACH ROW
+		  EXECUTE PROCEDURE LOGERNEW('Добавилось'::varchar(100));
+
+		CREATE TRIGGER segment_update
+		  BEFORE delete 
+		  ON USER_SEGMENTS
+		  FOR EACH ROW
+		  EXECUTE PROCEDURE LOGEROLD('Удалилось'::varchar(100)); 
         `
 	_ = db.Conn.QueryRow(query)
 	return nil
