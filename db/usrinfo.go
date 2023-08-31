@@ -30,3 +30,27 @@ func (db Database) GetUsrById(userId int) (models.Usr, error) {
 	}
 	return user, err
 }
+func (db Database) CreateUser(userId int) error {
+	query := `INSERT INTO USERS (userID) VALUES ($1)`
+	_, err := db.Conn.Exec(query, userId)
+	return err
+}
+func (db Database) GetAllUserIds() ([]int64, error) {
+	query := `SELECT USERS.userID FROM USERS;`
+	rows, err := db.Conn.Query(query)
+	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+	var userIDs []int64
+	for rows.Next() {
+		var userID int64
+		err := rows.Scan(&userID)
+		if err != nil {
+			return nil, err
+		}
+		userIDs = append(userIDs, userID)
+
+	}
+	return userIDs, err
+}

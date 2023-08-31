@@ -35,6 +35,7 @@ func ChangeSegments(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, ErrBadRequest)
 		return
 	}
+	_ = dbInstance.CreateUser(createSegmentRequest.UserID)
 	for _, s := range createSegmentRequest.ToDelete {
 		segid, err := dbInstance.GetSegmentByName(s)
 		if err != nil {

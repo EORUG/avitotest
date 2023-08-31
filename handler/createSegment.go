@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"math/rand"
 	"net/http"
 
 	"github.com/EORUG/avitotest/models"
@@ -16,7 +17,7 @@ func CreateSegment(router chi.Router) {
 
 type CreateSegmentRequest struct {
 	Name    string `json:"name"`
-	Persent int    `json:"persent"`
+	Persent *int   `json:"persent"`
 }
 
 func (i *CreateSegmentRequest) Bind(r *http.Request) error {
@@ -39,6 +40,29 @@ func CreateSegments(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		render.Render(w, r, ErrorRenderer(err))
 		return
+	}
+	if (createSegmentRequest.Persent == nil) || (*createSegmentRequest.Persent == 0) {
+		if err := render.Render(w, r, segment); err != nil {
+			render.Render(w, r, ServerErrorRenderer(err))
+			return
+		}
+	}
+	userIDs, err := dbInstance.GetAllUserIds()
+	if err != nil {
+		render.Render(w, r, ErrorRenderer(err))
+		return
+	}
+
+	for _, userID := range userIDs {
+		if rand.Intn(100) > *createSegmentRequest.Persent {
+			continue
+		}
+		toadd := models.UsrSegment{SegmentID: segment.SegmentID, UsrID: int(userID)}
+		err = dbInstance.AddUserSegment(&toadd)
+		if err != nil {
+			render.Render(w, r, ErrorRenderer(err))
+			return
+		}
 	}
 	if err := render.Render(w, r, segment); err != nil {
 		render.Render(w, r, ServerErrorRenderer(err))

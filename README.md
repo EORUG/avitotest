@@ -1,4 +1,5 @@
 # гайд по установке
+один из подов может не подняться при первом запуске, тогда следует потушить все командой docker-compose down и запустить compose up еще раз
 ```bash
 docker-compose up --build
 ```
@@ -14,7 +15,7 @@ curl --location 'localhost:8080/GetUserInfo' \
 curl --location 'localhost:8080/CreateSegment' \
 --header 'content-type: application/json' \
 --data '{"name":"name3",
-"percent":1}'
+"persent":1}'
 ```
 3 Метод добавления и удаления сегментов у пользователя
 ```bash
@@ -38,6 +39,7 @@ curl --location 'localhost:8080/DeleteSegment' \
 
 взаимодействие с базой данных в папке db
 
-миграции базы накатываются в db/db.go
 # Вопросы по ходу разработки
-1
+1 Было не очень понятно как чистить по ttl так что я написал клинер в отдельной горутине 
+
+2
